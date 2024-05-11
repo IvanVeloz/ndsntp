@@ -21,14 +21,14 @@ int main(void) {
 
 	consoleDemoInit();
 
-	iprintf("Connecting via WFC data.n");
+	iprintf("Connecting via WFC data\n");
 
 	if(!Wifi_InitDefault(WFC_CONNECT)) {
-		iprintf("Connection failed.");
+		iprintf("Connection failed.\n");
 		goto idle;
 	}
 
-	iprintf("Connected.\n\n");
+	iprintf("Connected.\n");
 
 	ip = Wifi_GetIPInfo(&gateway, &mask, &dns1, &dns2);
 	
