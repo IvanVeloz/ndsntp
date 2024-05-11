@@ -1,0 +1,3 @@
+[submodule "coreSNTP"]
+	path = coreSNTP
+	url = https://github.com/FreeRTOS/coreSNTP.git

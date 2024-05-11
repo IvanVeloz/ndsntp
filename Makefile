@@ -17,9 +17,9 @@ include $(DEVKITARM)/ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source coreSNTP/source
 DATA		:=	data  
-INCLUDES	:=	include
+INCLUDES	:=	include coreSNTP/source/include
 
 #---------------------------------------------------------------------------------
 # options for code generation

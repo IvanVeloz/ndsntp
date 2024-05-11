@@ -5,8 +5,8 @@
 #include <dswifi9.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
 #include <stdio.h>
+#include <core_sntp_client.h>
 
 //---------------------------------------------------------------------------------
 int main(void) {
