@@ -9,6 +9,7 @@
 #include <time.h>               /* Time and calendar */
 #include <core_sntp_client.h>
 #include "core_sntp_callbacks.h"
+#include "core_sntp_config_defaults.h"
 
 
 /** 
@@ -35,12 +36,27 @@ bool sntpResolveDns(const SntpServerInfo_t * pServerAddr,
  * @brief Obtains current system time from the NDS BIOS and converts it into an
  * SNTP timestamp format. Corresponds to SntpGetTime_t callback.
  * 
- * To reduce complexity, several assumptions have been made.
- * 1. The number of seconds since the NTP epoch (00:00 on 01/01/1900) is assumed
- * to be
+ * To reduce complexity, we make a few assumptions:
+ * 1. The adjustments for leap seconds are being handled by the standard C 
+ * library (newlibc in the case of DevKitPro, picolibc in the case of BlocksDS).
+ * Consult the corresponding documentation.
+ * 2. No adjustments have been made to account for the delay in getting the
+ * time from the RTC (or the function itself).
+ * 3. Accuracy better than 1 second is not necessary. I would like to improve
+ * this down to 10ms eventually, which is the highest date resolution of the FAT 
+ * filesystem.
+ * 
+ * And we make the following assertions:
+ * 1. There were no leap seconds between the NTP epoch (1900-01-01T00:00:00Z) 
+ * and Unix epoch (1970-01-01T00:00:00Z). The number of seconds between the 
+ * NTP epoch and the Unix epoch is 2208988800L according to RFC 868.
  * 
  */
 void sntpGetTime(SntpTimestamp_t * pCurrentTime)
 {
-    
+    time_t unixTime = time(NULL);
+    if(unixTime == (time_t)(-1)) {
+        LogWarn(("Could not get time from RTC. Continuing."));
+    }
+    pCurrentTime->seconds = unixTime + 2208988800L;
 }

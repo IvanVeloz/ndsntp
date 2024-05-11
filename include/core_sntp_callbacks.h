@@ -12,4 +12,6 @@
 bool sntpResolveDns(const SntpServerInfo_t * pServerAddr,
                             uint32_t * pIpV4Addr);
 
+void sntpGetTime(SntpTimestamp_t * pCurrentTime);
+
 #endif  /* ifndef CORE_SNTP_CALLBACKS_H_ */
