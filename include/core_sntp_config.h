@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Ivan Veloz.  All Rights Reserved.
+ * Copyright (C) 2024 Ivan Veloz.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -27,19 +27,35 @@
 #include <stdio.h>
 
 #ifndef LogError
-    #define LogError( message ) iprintf("coreSNTP: ERROR: " message "\n");
+    #define LogError( message )     \
+        iprintf("coreSNTP: ");      \
+        iprintf("ERROR: ");         \
+        iprintf message;            \
+        iprintf("\n");
 #endif
 
 #ifndef LogWarn
-    #define LogWarn( message ) iprintf("coreSNTP: WARN: " message "\n");
+    #define LogWarn( message )      \
+        iprintf("coreSNTP: ");      \
+        iprintf("WARN: ");          \
+        iprintf message;            \
+        iprintf("\n");
 #endif
 
 #ifndef LogInfo
-    #define LogInfo( message ) iprintf("coreSNTP: info: " message "\n");
+    #define LogInfo( message )      \
+        iprintf("coreSNTP: ");      \
+        iprintf("info: ");          \
+        iprintf message;            \
+        iprintf("\n");
 #endif
 
 #ifndef LogDebug
-    #define LogDebug( message ) iprintf("coreSNTP: debug: " message "\n");
+    #define LogDebug( message )     \
+        iprintf("coreSNTP: ");      \
+        iprintf("debug: ");         \
+        iprintf message;            \
+        iprintf("\n");
 #endif
 
 #endif /* ifndef CORE_SNTP_CONFIG_DEFAULTS_H_ */
