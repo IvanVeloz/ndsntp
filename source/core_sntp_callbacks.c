@@ -60,7 +60,7 @@ void sntpGetTime(SntpTimestamp_t * pCurrentTime)
 {
     time_t unixTime = time(NULL);
     if(unixTime == (time_t)(-1)) {
-        LogWarn(("Could not get time from RTC. Continuing.\n"));
+        LogWarn(("Could not get time from RTC. Continuing."));
     }
     pCurrentTime->seconds = unixTime + 2208988800L;
 }
@@ -89,7 +89,7 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
     uint32_t s, ms;
     SntpStatus_t status = Sntp_ConvertToUnixTime(pServerTime, &s, &ms);
     if(status != SntpSuccess) {
-        LogWarn(("Could not get time from SNTP. Continuing.\n"));
+        LogWarn(("Could not get time from SNTP. Continuing."));
     }
     struct timespec t = {
         .tv_sec  = (time_t)s,
