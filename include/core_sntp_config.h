@@ -28,32 +28,32 @@
 
 #ifndef LogError
     #define LogError( message )     \
-        iprintf("coreSNTP: ");      \
-        iprintf("ERROR: ");         \
+        iprintf("NTP-");            \
+        iprintf("ERR: ");           \
         iprintf message;            \
         iprintf("\n");
 #endif
 
 #ifndef LogWarn
     #define LogWarn( message )      \
-        iprintf("coreSNTP: ");      \
-        iprintf("WARN: ");          \
+        iprintf("NTP-");            \
+        iprintf("WRN: ");           \
         iprintf message;            \
         iprintf("\n");
 #endif
 
 #ifndef LogInfo
     #define LogInfo( message )      \
-        iprintf("coreSNTP: ");      \
-        iprintf("info: ");          \
+        iprintf("NTP-");            \
+        iprintf("inf: ");           \
         iprintf message;            \
         iprintf("\n");
 #endif
 
 #ifndef LogDebug
     #define LogDebug( message )     \
-        iprintf("coreSNTP: ");      \
-        iprintf("debug: ");         \
+        iprintf("NTP-");            \
+        iprintf("dbg: ");           \
         iprintf message;            \
         iprintf("\n");
 #endif
