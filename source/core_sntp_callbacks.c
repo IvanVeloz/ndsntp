@@ -32,7 +32,7 @@ bool sntpResolveDns(const SntpServerInfo_t * pServerAddr,
 	if(ntphost->h_length != 4)          return false;
 
     struct in_addr addr = *(struct in_addr *)ntphost->h_addr_list[0];
-    *pIpV4Addr = (uint32_t)addr.s_addr;
+    *pIpV4Addr = htonl((uint32_t)addr.s_addr);
     return true;
 }
 
