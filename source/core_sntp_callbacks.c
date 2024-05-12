@@ -31,7 +31,8 @@ bool sntpResolveDns(const SntpServerInfo_t * pServerAddr,
 	if(ntphost->h_addrtype != AF_INET)  return false;
 	if(ntphost->h_length != 4)          return false;
 
-    *pIpV4Addr = (uint32_t)ntphost->h_addr_list[0];
+    struct in_addr addr = *(struct in_addr *)ntphost->h_addr_list[0];
+    *pIpV4Addr = (uint32_t)addr.s_addr;
     return true;
 }
 
