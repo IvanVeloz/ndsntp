@@ -5,9 +5,11 @@
 */
 #include <nds/system.h>         /* Real time clock */
 #include <sys/socket.h>         /* Network sockets */
+#include <sys/select.h>         /* fd_set type and macros for select() */
+#include <netinet/in.h>         /* socketaddr_in */
 #include <netdb.h>              /* DNS lookups */
 #include <time.h>               /* Time and calendar */
-#include <assert.h>
+#include <errno.h>
 #include <core_sntp_client.h>
 #include "core_sntp_callbacks.h"
 #include "core_sntp_config_defaults.h"
@@ -93,4 +95,76 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
         .tv_nsec = (time_t)(ms*1000),
     };
     clock_settime(CLOCK_REALTIME, &t);
+}
+
+/**
+ * 
+ */
+int32_t sntpUdpSend(NetworkContext_t * pNetworkContext,
+                    uint32_t serverAddr,
+                    uint16_t serverPort,
+                    const void * pBuffer,
+                    uint16_t bytesToSend)
+{
+    struct timeval tout = {.tv_sec = 0, .tv_usec = 0};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(pNetworkContext->udpSocket, &fds);
+     
+    int r = select( pNetworkContext->udpSocket+1,
+                    NULL, &fds, &fds, &tout);
+    if(r < 0) {
+        LogWarn(("Could not open UDP socket for writing. Aborting.\n"));
+        LogWarn(("Errno was %i\n", errno));
+        return r;
+    }
+    else if(r > 0) {
+        struct sockaddr_in addri;
+        addri.sin_family = AF_INET;
+        addri.sin_port = htons(serverPort);
+        addri.sin_addr.s_addr = htonl(serverAddr);
+        
+        r = sendto( pNetworkContext->udpSocket, pBuffer, bytesToSend, 0,
+                    (const struct sockaddr *)(&addri), sizeof(addri));
+    }
+    else if(r == 0) {
+        r = 0;
+    }
+    return r;
+}
+
+/**
+ * 
+ */
+int32_t sntpUdpRecv(NetworkContext_t * pNetworkContext,
+                    uint32_t serverAddr,
+                    uint16_t serverPort,
+                    void * pBuffer,
+                    uint16_t bytesToRecv)
+{
+    struct timeval tout = {.tv_sec = 0, .tv_usec = 0};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(pNetworkContext->udpSocket, &fds);
+     
+    int r = select( pNetworkContext->udpSocket+1,
+                    &fds, NULL, &fds, &tout);
+    if(r < 0) {
+        LogWarn(("Could not open UDP socket for reading. Aborting.\n"));
+        LogWarn(("Errno was %i\n", errno));
+        return r;
+    }
+    else if (r > 0) {
+        struct sockaddr_in addri;
+        addri.sin_family = AF_INET;
+        addri.sin_port = htons(serverPort);
+        addri.sin_addr.s_addr = htonl(serverAddr);
+        int addrlen = sizeof(addri);
+        r = recvfrom(   pNetworkContext->udpSocket, pBuffer,bytesToRecv, 0,
+                        (struct sockaddr *)(&addri), &addrlen);
+    }
+    else if (r == 0) {
+        r = 0;
+    }
+    return r;
 }
