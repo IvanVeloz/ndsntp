@@ -7,6 +7,7 @@
 #include <sys/socket.h>         /* Network sockets */
 #include <netdb.h>              /* DNS lookups */
 #include <time.h>               /* Time and calendar */
+#include <assert.h>
 #include <core_sntp_client.h>
 #include "core_sntp_callbacks.h"
 #include "core_sntp_config_defaults.h"
@@ -59,4 +60,37 @@ void sntpGetTime(SntpTimestamp_t * pCurrentTime)
         LogWarn(("Could not get time from RTC. Continuing."));
     }
     pCurrentTime->seconds = unixTime + 2208988800L;
+}
+
+/**
+ * @brief Obtains UTC time from an SNTP timestamp and stores it in the NDS RTC.
+ * 
+ * To reduce complexity, we compromised and we are using the
+ * `Sntp_ConverToUnixTime` function, which is NOT Y2K28-proof. This was a
+ * deliberate decition on the part of the coreSNTP team. In the near future, I
+ * would like to rewrite this `sntpSetTime` function to be Y2K38-proof. This
+ * probably means handling our own conversion or finding a library to do so.
+ * 
+ * We also made the following assumptions:
+ * 1. No adjustments have been made to account for the delay in getting the
+ * time from the RTC (or the function itself).
+ * 2. Accuracy better than 1 second is not necessary. I would like to improve
+ * this down to 10ms eventually, which is the highest date resolution of the FAT 
+ * filesystem.
+ */
+void sntpSetTime(   const SntpServerInfo_t * pTimeServer, 
+                    const SntpTimestamp_t * pServerTime,
+                    int64_t clockOffsetMs,
+                    SntpLeapSecondInfo_t leapSecondInfo )
+{
+    uint32_t s, ms;
+    SntpStatus_t status = Sntp_ConvertToUnixTime(pServerTime, &s, &ms);
+    if(status != SntpSuccess) {
+        LogWarn(("Could not get time from SNTP. Continuing."));
+    }
+    struct timespec t = {
+        .tv_sec  = (time_t)s,
+        .tv_nsec = (time_t)(ms*1000),
+    };
+    clock_settime(CLOCK_REALTIME, &t);
 }

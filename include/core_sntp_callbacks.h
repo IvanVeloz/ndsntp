@@ -14,4 +14,9 @@ bool sntpResolveDns(const SntpServerInfo_t * pServerAddr,
 
 void sntpGetTime(SntpTimestamp_t * pCurrentTime);
 
+void sntpSetTime(   const SntpServerInfo_t * pTimeServer, 
+                    const SntpTimestamp_t * pServerTime,
+                    int64_t clockOffsetMs,
+                    SntpLeapSecondInfo_t leapSecondInfo);
+
 #endif  /* ifndef CORE_SNTP_CALLBACKS_H_ */
