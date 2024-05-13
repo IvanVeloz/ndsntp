@@ -95,6 +95,7 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
         .tv_sec  = (time_t)s,
         .tv_nsec = (time_t)(ms*1000),
     };
+    LogInfo(("RTC set to %lli",t.tv_sec));
     clock_settime(CLOCK_REALTIME, &t);
 }
 
@@ -107,30 +108,42 @@ int32_t sntpUdpSend(NetworkContext_t * pNetworkContext,
                     const void * pBuffer,
                     uint16_t bytesToSend)
 {
-    struct timeval tout = {.tv_sec = 0, .tv_usec = 0};
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(pNetworkContext->udpSocket, &fds);
-     
-    int r = select( pNetworkContext->udpSocket+1,
-                    NULL, &fds, &fds, &tout);
+    struct sockaddr_in addri;
+    addri.sin_family = AF_INET;
+    addri.sin_port = htons(serverPort);
+    addri.sin_addr.s_addr = htonl(serverAddr);
+    connect(pNetworkContext->udpSocket,
+            (struct sockaddr*)&addri,
+            sizeof(addri));
+    /*
+     * NOTE: dswifi select() is not implemented for UDP, it seems.
+     * TODO: investigate further, contribute fix if necessary.
+     * ```
+     * fd_set fds;
+     * FD_ZERO(&fds);
+     * FD_SET(pNetworkContext->udpSocket, &fds);
+     * struct timeval tout = {.tv_sec = 0, .tv_usec = 100};
+     * int r = select( pNetworkContext->udpSocket+1,
+     *                 NULL, &fds, &fds, &tout);
+     * ```
+     */
+    int r = 1;
     if(r < 0) {
-        LogWarn(("Could not open UDP socket for writing. Aborting.\n"));
-        LogWarn(("Errno was %i\n", errno));
-        return r;
+        LogError(("Could not poll UDP socket for writing. Aborting."));
+        LogError(("Errno was %i", errno));
+        goto cleanup;
     }
     else if(r > 0) {
-        struct sockaddr_in addri;
-        addri.sin_family = AF_INET;
-        addri.sin_port = htons(serverPort);
-        addri.sin_addr.s_addr = htonl(serverAddr);
-        
+
         r = sendto( pNetworkContext->udpSocket, pBuffer, bytesToSend, 0,
                     (const struct sockaddr *)(&addri), sizeof(addri));
     }
     else if(r == 0) {
-        r = 0;
+        // Timed out. This is normal.
+        goto cleanup;
     }
+    cleanup:
+  	shutdown(pNetworkContext->udpSocket,0);
     return r;
 }
 
@@ -143,7 +156,15 @@ int32_t sntpUdpRecv(NetworkContext_t * pNetworkContext,
                     void * pBuffer,
                     uint16_t bytesToRecv)
 {
-    struct timeval tout = {.tv_sec = 0, .tv_usec = 0};
+    struct sockaddr_in addri;
+    addri.sin_family = AF_INET;
+    addri.sin_port = htons(serverPort);
+    addri.sin_addr.s_addr = htonl(serverAddr);
+    connect(pNetworkContext->udpSocket,
+            (struct sockaddr*)&addri,
+            sizeof(addri));
+
+    struct timeval tout = {.tv_sec = 0, .tv_usec = 100};
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(pNetworkContext->udpSocket, &fds);
@@ -151,21 +172,20 @@ int32_t sntpUdpRecv(NetworkContext_t * pNetworkContext,
     int r = select( pNetworkContext->udpSocket+1,
                     &fds, NULL, &fds, &tout);
     if(r < 0) {
-        LogWarn(("Could not open UDP socket for reading. Aborting.\n"));
-        LogWarn(("Errno was %i\n", errno));
-        return r;
+        LogWarn(("Could not open UDP socket for reading. Aborting."));
+        LogWarn(("Errno was %i", errno));
+        goto cleanup;
     }
     else if (r > 0) {
-        struct sockaddr_in addri;
-        addri.sin_family = AF_INET;
-        addri.sin_port = htons(serverPort);
-        addri.sin_addr.s_addr = htonl(serverAddr);
         int addrlen = sizeof(addri);
         r = recvfrom(   pNetworkContext->udpSocket, pBuffer,bytesToRecv, 0,
                         (struct sockaddr *)(&addri), &addrlen);
     }
     else if (r == 0) {
-        r = 0;
+        // Timed out. This is normal.
+        goto cleanup;
     }
+    cleanup:
+   	shutdown(pNetworkContext->udpSocket,0);
     return r;
 }
