@@ -26,36 +26,54 @@
 
 #include <stdio.h>
 
-#ifndef LogError
-    #define LogError( message )     \
-        iprintf("NTP-");            \
-        iprintf("ERR: ");           \
-        iprintf message;            \
-        iprintf("\n");
+#ifndef CORE_SNTP_LOG_LEVEL
+#define CORE_SNTP_LOG_LEVEL 6
 #endif
 
+#ifndef LogError
+#   if CORE_SNTP_LOG_LEVEL >= 3
+#       define LogError( message )      \
+            iprintf("NTP-");            \
+            iprintf("ERR: ");           \
+            iprintf message;            \
+            iprintf("\n");
+#       endif
+#   endif
+
 #ifndef LogWarn
-    #define LogWarn( message )      \
-        iprintf("NTP-");            \
-        iprintf("WRN: ");           \
-        iprintf message;            \
-        iprintf("\n");
+#   if CORE_SNTP_LOG_LEVEL >= 4
+#       define LogWarn( message )       \
+            iprintf("NTP-");            \
+            iprintf("WRN: ");           \
+            iprintf message;            \
+            iprintf("\n");
+#   else
+#       define LogWarn ( message )
+#   endif
 #endif
 
 #ifndef LogInfo
-    #define LogInfo( message )      \
-        iprintf("NTP-");            \
-        iprintf("inf: ");           \
-        iprintf message;            \
-        iprintf("\n");
+#   if CORE_SNTP_LOG_LEVEL >= 6
+#       define LogInfo( message )           \
+                iprintf("NTP-");            \
+                iprintf("inf: ");           \
+                iprintf message;            \
+                iprintf("\n");
+#   else
+#        define LogInfo( message )
+#   endif
 #endif
 
 #ifndef LogDebug
-    #define LogDebug( message )     \
-        iprintf("NTP-");            \
-        iprintf("dbg: ");           \
-        iprintf message;            \
-        iprintf("\n");
+#   if CORE_SNTP_LOG_LEVEL >= 7
+#       define LogDebug( message )      \
+            iprintf("NTP-");            \
+            iprintf("dbg: ");           \
+            iprintf message;            \
+            iprintf("\n");
+#   else
+#       define LogDebug( message )
+#   endif
 #endif
 
 #endif /* ifndef CORE_SNTP_CONFIG_DEFAULTS_H_ */
