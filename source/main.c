@@ -48,35 +48,35 @@ int main(void) {
 
 	consoleDemoInit();
 
-	iprintf("Connecting via WFC data\n");
+	printf("Connecting via WFC data\n");
 
 	if(!Wifi_InitDefault(WFC_CONNECT)) {
-		iprintf("Connection failed.\n");
+		printf("Connection failed.\n");
 		goto idle;
 	}
 
-	iprintf("Connected.\n");
+	printf("Connected.\n");
 
 	ip = Wifi_GetIPInfo(&gateway, &mask, &dns1, &dns2);
 	
-	iprintf("ip     : %s\n", inet_ntoa(ip) );
-	iprintf("gateway: %s\n", inet_ntoa(gateway) );
-	iprintf("mask   : %s\n", inet_ntoa(mask) );
-	iprintf("dns1   : %s\n", inet_ntoa(dns1) );
-	iprintf("dns2   : %s\n", inet_ntoa(dns2) );
+	printf("ip     : %s\n", inet_ntoa(ip) );
+	printf("gateway: %s\n", inet_ntoa(gateway) );
+	printf("mask   : %s\n", inet_ntoa(mask) );
+	printf("dns1   : %s\n", inet_ntoa(dns1) );
+	printf("dns2   : %s\n", inet_ntoa(dns2) );
 
-	iprintf("ntp url: %s\n",ntpurl);
+	printf("ntp url: %s\n",ntpurl);
 
 	struct hostent * ntphost = gethostbyname(ntpurl);
 	if(ntphost == NULL) {
-		iprintf("Error: failed to get hostname");
+		printf("Error: failed to get hostname");
 		goto idle;
 	}
 
-	iprintf("h_name : %s\n",ntphost->h_name);
+	printf("h_name : %s\n",ntphost->h_name);
 
 	for(size_t i=0; ntphost->h_aliases[i] != NULL; i++) {
-		iprintf("h_alias: %s\n",ntphost->h_aliases[i]);
+		printf("h_alias: %s\n",ntphost->h_aliases[i]);
 	}
 
 	/* Assert that we're dealing with IPv4 addresses, 32 bit lengths. */
@@ -85,7 +85,7 @@ int main(void) {
 
 	for(int i=0; ntphost->h_addr_list[i] != NULL; i++) {
 		struct in_addr a = *(struct in_addr *)ntphost->h_addr_list[i];
-		iprintf("h_addr : %s\n", inet_ntoa(a));
+		printf("h_addr : %s\n", inet_ntoa(a));
 	}
 	
 
@@ -130,7 +130,7 @@ int main(void) {
     SntpContext_t context;
  
 	LogDebug(("Initializing SNTP"));
-	iprintf("Unix time is %llu\n", time(NULL));
+	printf("Unix time is %llu\n", time(NULL));
 
     /* Initialize context. */
     SntpStatus_t status = Sntp_Init( &context,
@@ -163,7 +163,7 @@ int main(void) {
         status = Sntp_SendTimeRequest( &context,
                                        rand() % UINT32_MAX,
                                        TIME_REQUEST_SEND_WAIT_TIME_MS );
-		iprintf("Sntp_SendTimeRequest = %u\n", (unsigned int)status);
+		printf("Sntp_SendTimeRequest = %u\n", (unsigned int)status);
 		if ( status != SntpSuccess ) continue;
         //assert( status == SntpSuccess );
  
@@ -171,21 +171,21 @@ int main(void) {
         {
             status = Sntp_ReceiveTimeResponse( &context, TIME_REQUEST_RECEIVE_WAIT_TIME_MS );
         } while( status == SntpNoResponseReceived );
- 		iprintf("Sntp_ReceiveTimeResponse = %u\n", (unsigned int)status);
+ 		printf("Sntp_ReceiveTimeResponse = %u\n", (unsigned int)status);
         if ( status != SntpSuccess ) continue;
 		//assert( status == SntpSuccess );
 
 		LogDebug(("SNTP Sucess!!!"));
-		iprintf("RTC is %llu\n", time(NULL));
+		printf("RTC is %llu\n", time(NULL));
 
 	    /* Delay of poll interval period before next time synchronization. */
 		cont:
 		break; 
 		/* TODO: sleep() and usleep() seem to be broken? They return -1.
 		 * Investigate.
-		iprintf("pollingIntervalPeriod = %lu\n", pollingIntervalPeriod);
+		printf("pollingIntervalPeriod = %lu\n", pollingIntervalPeriod);
 		uint32_t remaining = sleep( pollingIntervalPeriod );
-		iprintf("remaining = %li\n", remaining);
+		printf("remaining = %li\n", remaining);
 		swiWaitForVBlank();
 		 */
     }

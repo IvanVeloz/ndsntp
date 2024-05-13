@@ -96,7 +96,8 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
         .tv_nsec = (time_t)(ms*1000),
     };
     LogInfo(("RTC set to %lli",t.tv_sec));
-    clock_settime(CLOCK_REALTIME, &t);
+    #warning clock_settime is commented out
+    //clock_settime(CLOCK_REALTIME, &t);
 }
 
 /**
