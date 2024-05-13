@@ -54,3 +54,4 @@ dkms.conf
 
 # IDE and code editors
 .vscode/
+*.code-workspace
