@@ -33,20 +33,20 @@
 #ifndef LogError
 #   if CORE_SNTP_LOG_LEVEL >= 3
 #       define LogError( message )      \
-            iprintf("NTP-");            \
-            iprintf("ERR: ");           \
-            iprintf message;            \
-            iprintf("\n");
+            printf("NTP-");            \
+            printf("ERR: ");           \
+            printf message;            \
+            printf("\n");
 #       endif
 #   endif
 
 #ifndef LogWarn
 #   if CORE_SNTP_LOG_LEVEL >= 4
 #       define LogWarn( message )       \
-            iprintf("NTP-");            \
-            iprintf("WRN: ");           \
-            iprintf message;            \
-            iprintf("\n");
+            printf("NTP-");            \
+            printf("WRN: ");           \
+            printf message;            \
+            printf("\n");
 #   else
 #       define LogWarn ( message )
 #   endif
@@ -55,10 +55,10 @@
 #ifndef LogInfo
 #   if CORE_SNTP_LOG_LEVEL >= 6
 #       define LogInfo( message )           \
-                iprintf("NTP-");            \
-                iprintf("inf: ");           \
-                iprintf message;            \
-                iprintf("\n");
+                printf("NTP-");            \
+                printf("inf: ");           \
+                printf message;            \
+                printf("\n");
 #   else
 #        define LogInfo( message )
 #   endif
@@ -67,10 +67,10 @@
 #ifndef LogDebug
 #   if CORE_SNTP_LOG_LEVEL >= 7
 #       define LogDebug( message )      \
-            iprintf("NTP-");            \
-            iprintf("dbg: ");           \
-            iprintf message;            \
-            iprintf("\n");
+            printf("NTP-");            \
+            printf("dbg: ");           \
+            printf message;            \
+            printf("\n");
 #   else
 #       define LogDebug( message )
 #   endif
