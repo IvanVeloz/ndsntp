@@ -40,7 +40,15 @@
 /* --- END OF coreSNTP EXAMPLE ---*/
 
 
-char * ntpurl = "us.pool.ntp.org";
+const char * ntpurl = "us.pool.ntp.org";
+
+void spinloop() {
+	while(1) {
+		swiWaitForVBlank();
+		int keys = keysDown();
+		if(keys) ;	
+	}
+}
 
 int main(void) {
 
@@ -52,7 +60,8 @@ int main(void) {
 
 	if(!Wifi_InitDefault(WFC_CONNECT)) {
 		printf("Connection failed.\n");
-		goto idle;
+		spinloop();
+		goto end;
 	}
 
 	printf("Connected.\n");
@@ -70,7 +79,8 @@ int main(void) {
 	struct hostent * ntphost = gethostbyname(ntpurl);
 	if(ntphost == NULL) {
 		printf("Error: failed to get hostname");
-		goto idle;
+		spinloop();
+		goto end;
 	}
 
 	printf("h_name : %s\n",ntphost->h_name);
@@ -158,6 +168,8 @@ int main(void) {
     /* @[code_example_sntp_calculatepollinterval] */
     assert( status == SntpSuccess );
 
+	/* --- END OF coreSNTP EXAMPLE ---*/
+
 	while( 1 )
     {
         status = Sntp_SendTimeRequest( &context,
@@ -165,7 +177,6 @@ int main(void) {
                                        TIME_REQUEST_SEND_WAIT_TIME_MS );
 		printf("Sntp_SendTimeRequest = %u\n", (unsigned int)status);
 		if ( status != SntpSuccess ) continue;
-        //assert( status == SntpSuccess );
  
         do
         {
@@ -173,31 +184,19 @@ int main(void) {
         } while( status == SntpNoResponseReceived );
  		printf("Sntp_ReceiveTimeResponse = %u\n", (unsigned int)status);
         if ( status != SntpSuccess ) continue;
-		//assert( status == SntpSuccess );
 
-		LogDebug(("SNTP Sucess!!!"));
-		printf("RTC is %llu\n", time(NULL));
-
-	    /* Delay of poll interval period before next time synchronization. */
-		cont:
-		break; 
-		/* TODO: sleep() and usleep() seem to be broken? They return -1.
-		 * Investigate.
-		printf("pollingIntervalPeriod = %lu\n", pollingIntervalPeriod);
-		uint32_t remaining = sleep( pollingIntervalPeriod );
-		printf("remaining = %li\n", remaining);
-		swiWaitForVBlank();
-		 */
+		printf("\n\n\nRTC is %llu\n", time(NULL));
+		printf("Press A to sync again.\n"
+			   "Press Start to power off.\n");
+		while(1) {
+			swiWaitForVBlank();
+			scanKeys();
+			int keys = keysDown();
+			if(keys & KEY_START) goto end;
+			if(keys & KEY_A) break;
+		}
+		printf("\n\n");
     }
- 
-	/* --- END OF coreSNTP EXAMPLE ---*/
-
-	idle:
-	while(1) {
-		swiWaitForVBlank();
-		int keys = keysDown();
-		if(keys & KEY_START) break;
-	}
-
+	end:
 	return 0;
 }
