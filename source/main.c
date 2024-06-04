@@ -18,27 +18,11 @@
 #include "core_sntp_callbacks.h"
 #include "core_sntp_config.h"
 
-/* --- START OF coreSNTP EXAMPLE --- */
-/* This section is Copyright (c) Amazon Inc. or its affiliates. 
- * Distribuited under the MIT license */
+/* Configuration constants for the SNTP client. */
 
-/* Configuration constants for the example SNTP client. */
- 
-/* Following Time Servers are used for illustrating the usage of library API.
- * The library can be configured to use ANY time server, whether publicly available
- * time service like NTP Pool or a privately owned NTP server. */
-#define TEST_TIME_SERVER_1                      "0.pool.ntp.org"
-#define TEST_TIME_SERVER_2                      "1.pool.ntp.org"
- 
-#define SERVER_RESPONSE_TIMEOUT_MS              3000
-#define TIME_REQUEST_SEND_WAIT_TIME_MS          2000
-#define TIME_REQUEST_RECEIVE_WAIT_TIME_MS       1000
- 
-#define SYSTEM_CLOCK_FREQUENCY_TOLERANCE_PPM    500
-#define SYSTEM_CLOCK_DESIRED_ACCURACY_MS        300
-
-/* --- END OF coreSNTP EXAMPLE ---*/
-
+#define NTP_TIMEOUT						3000
+#define NTP_SEND_WAIT_TIME_MS 			2000
+#define NTP_RECEIVE_WAIT_TIME_MS		1000
 
 const char * ntpurl = "us.pool.ntp.org";
 
@@ -46,7 +30,7 @@ void spinloop() {
 	while(1) {
 		swiWaitForVBlank();
 		int keys = keysDown();
-		if(keys) ;	
+		if(keys) break;	
 	}
 }
 
@@ -98,89 +82,51 @@ int main(void) {
 		printf("h_addr : %s\n", inet_ntoa(a));
 	}
 	
+	uint8_t netBuffer[SNTP_PACKET_BASE_SIZE];
+	NetworkContext_t netContext;
+	netContext.udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
+	LogDebug(("UDP fd : %i",con.udpSocket));
 
-	/* --- START OF coreSNTP EXAMPLE --- */
-	/* This section is Copyright (c) Amazon Inc. or its affiliates. 
-	 * Distribuited under the MIT license */
+	SntpServerInfo_t server = {
+		.port = SNTP_DEFAULT_SERVER_PORT,
+		.pServerName = ntpurl,
+		.serverNameLen = strlen(ntpurl)
+	};
 
-    /* @[code_example_sntp_init] */
-    /* Memory for network buffer. */
-    uint8_t networkBuffer[ SNTP_PACKET_BASE_SIZE ];
- 
-    /* Create UDP socket. */
-    NetworkContext_t udpContext;
- 
-    udpContext.udpSocket = socket( AF_INET, SOCK_DGRAM, 0 );
-	LogDebug(("UDP fd : %i",udpContext.udpSocket));
- 
-    /* Setup list of time servers. */
-    SntpServerInfo_t pTimeServers[] =
-    {
-        {
-            .port = SNTP_DEFAULT_SERVER_PORT,
-            .pServerName = TEST_TIME_SERVER_1,
-            .serverNameLen = strlen( TEST_TIME_SERVER_1 )
-        },
-        {
-            .port = SNTP_DEFAULT_SERVER_PORT,
-            .pServerName = TEST_TIME_SERVER_2,
-            .serverNameLen = strlen( TEST_TIME_SERVER_2 )
-        }
-    };
- 
-    /* Set the UDP transport interface object. */
     UdpTransportInterface_t udpTransportIntf;
  
-    udpTransportIntf.pUserContext = &udpContext;
+    udpTransportIntf.pUserContext = &netContext;
     udpTransportIntf.sendTo = sntpUdpSend;
     udpTransportIntf.recvFrom = sntpUdpRecv;
- 
-    /* Context variable. */
-    SntpContext_t context;
- 
-	LogDebug(("Initializing SNTP"));
-	printf("Unix time is %llu\n", time(NULL));
 
-    /* Initialize context. */
-    SntpStatus_t status = Sntp_Init( &context,
-                                     pTimeServers,
-                                     sizeof( pTimeServers ) / sizeof( SntpServerInfo_t ),
-                                     SERVER_RESPONSE_TIMEOUT_MS,
-                                     networkBuffer,
+	SntpContext_t sntpContext;
+	
+    SntpStatus_t status = Sntp_Init( &sntpContext,
+                                     &server,
+                                     sizeof( server ) / sizeof( SntpServerInfo_t ),
+                                     NTP_TIMEOUT,
+                                     netBuffer,
                                      SNTP_PACKET_BASE_SIZE,
                                      sntpResolveDns,
                                      sntpGetTime,
                                      sntpSetTime,
                                      &udpTransportIntf,
                                      NULL );
- 
-    assert( status == SntpSuccess );
-    /* @[code_example_sntp_init] */
- 
-    /* Calculate the polling interval period for the SNTP client. */
-    /* @[code_example_sntp_calculatepollinterval] */
-    uint32_t pollingIntervalPeriod;
- 
-    status = Sntp_CalculatePollInterval( SYSTEM_CLOCK_FREQUENCY_TOLERANCE_PPM,
-                                         SYSTEM_CLOCK_DESIRED_ACCURACY_MS,
-                                         &pollingIntervalPeriod );
-    /* @[code_example_sntp_calculatepollinterval] */
-    assert( status == SntpSuccess );
-
-	/* --- END OF coreSNTP EXAMPLE ---*/
+	
+	assert(status == SntpSuccess);
 
 	while( 1 )
     {
-        status = Sntp_SendTimeRequest( &context,
+        status = Sntp_SendTimeRequest( &sntpContext,
                                        rand() % UINT32_MAX,
-                                       TIME_REQUEST_SEND_WAIT_TIME_MS );
+                                       NTP_SEND_WAIT_TIME_MS );
 		printf("Sntp_SendTimeRequest = %u\n", (unsigned int)status);
 		if ( status != SntpSuccess ) continue;
  
         do
         {
-            status = Sntp_ReceiveTimeResponse( &context, TIME_REQUEST_RECEIVE_WAIT_TIME_MS );
+            status = Sntp_ReceiveTimeResponse( &sntpContext, NTP_RECEIVE_WAIT_TIME_MS );
         } while( status == SntpNoResponseReceived );
  		printf("Sntp_ReceiveTimeResponse = %u\n", (unsigned int)status);
         if ( status != SntpSuccess ) continue;
