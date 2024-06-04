@@ -46,7 +46,7 @@ void spinloop() {
 	while(1) {
 		swiWaitForVBlank();
 		int keys = keysDown();
-		if(keys) ;	
+		if(keys) break;	
 	}
 }
 
