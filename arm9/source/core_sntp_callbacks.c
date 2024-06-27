@@ -90,16 +90,13 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
     uint32_t s, ms;
     SntpStatus_t status = Sntp_ConvertToUnixTime(pServerTime, &s, &ms);
     if(status != SntpSuccess) {
-        LogWarn(("Could not get time from SNTP. Continuing."));
+        LogWarn(("Could not get time from SNTP. Skipping time setting."));
+        return;
     }
     struct timespec t = {
         .tv_sec  = (time_t)s,
         .tv_nsec = (time_t)(ms*1000),
     };
-    LogInfo(("RTC set to %lli",t.tv_sec));
-
-    #warning clock_settime is commented out
-    //clock_settime(CLOCK_REALTIME, &t);
 
     struct tm ts;
     ts = *localtime(&t.tv_sec);
@@ -115,6 +112,7 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
         .seconds = ts.tm_sec
     };
     fifoSendDatamsg(FIFO_USER_01, sizeof(rtctime), (void *)&rtctime);
+    LogInfo(("RTC set to %lli",t.tv_sec));
 }
 
 /**
