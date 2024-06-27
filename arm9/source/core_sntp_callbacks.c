@@ -2,7 +2,8 @@
  * Copyright (C) 2024 Ivan Veloz.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
-*/
+ * SPDX-FileContributor: Ivan Veloz, 2024
+ */
 #include <nds/system.h>         /* Real time clock */
 #include <sys/socket.h>         /* Network sockets */
 #include <sys/select.h>         /* fd_set type and macros for select() */

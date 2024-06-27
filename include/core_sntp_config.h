@@ -1,7 +1,8 @@
 /*
- * Copyright (C) 2024 Ivan Veloz.  All Rights Reserved.
- *
  * SPDX-License-Identifier: MIT
+ * SPDX-FileContributor: Ivan Veloz, 2024
+ * 
+ * Copyright (C) 2024 Ivan Veloz.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
