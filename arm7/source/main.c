@@ -1,12 +1,9 @@
-// SPDX-License-Identifier: Zlib
-// SPDX-FileNotice: Modified from the original version by the BlocksDS project.
+// SPDX-License-Identifier: CC0-1.0
 //
-// Copyright (C) 2005 Michael Noland (joat)
-// Copyright (C) 2005 Jason Rogers (Dovoto)
-// Copyright (C) 2005-2015 Dave Murphy (WinterMute)
-// Copyright (C) 2023 Antonio Niño Díaz
+// SPDX-FileContributor: Antonio Niño Díaz, 2023
 
-// Default ARM7 core
+#include <stdio.h>
+#include <time.h>
 
 #include <dswifi7.h>
 #include <nds.h>
@@ -23,6 +20,38 @@ void vblank_handler(void)
 {
     inputGetAndSend();
     Wifi_Update();
+}
+
+void fifo_handler_datamsg_time_date(int num_bytes, void *userdata)
+{
+    rtcTimeAndDate rtc_time_date;
+    fifoGetDatamsg(FIFO_USER_01, sizeof(rtc_time_date), (void *)&rtc_time_date);
+
+    uint32_t ok = 0;
+
+    if (rtcTimeAndDateSet(&rtc_time_date) == 0)
+        ok = 1;
+
+    // Read the RTC to get the new date instead of assuming the write succeeded
+    resyncClock();
+
+    fifoSendValue32(FIFO_USER_01, ok);
+}
+
+void fifo_handler_datamsg_time(int num_bytes, void *userdata)
+{
+    rtcTime rtc_time;
+    fifoGetDatamsg(FIFO_USER_02, sizeof(rtc_time), (void *)&rtc_time);
+
+    uint32_t ok = 0;
+
+    if (rtcTimeSet(&rtc_time) == 0)
+        ok = 1;
+
+    // Read the RTC to get the new date instead of assuming the write succeeded
+    resyncClock();
+
+    fifoSendValue32(FIFO_USER_01, ok);
 }
 
 int main(int argc, char *argv[])
@@ -67,9 +96,14 @@ int main(int argc, char *argv[])
 
     irqEnable(IRQ_VBLANK);
 
+    // This channel will listen to messages from the ARM9 with a time and date
+    fifoSetDatamsgHandler(FIFO_USER_01, fifo_handler_datamsg_time_date, NULL);
+    // This one will only change the time
+    fifoSetDatamsgHandler(FIFO_USER_02, fifo_handler_datamsg_time, NULL);
+
     while (!exit_loop)
     {
-        const uint16_t key_mask = KEY_SELECT | KEY_START | KEY_L | KEY_R;
+        const uint16_t key_mask = KEY_START;
         uint16_t keys_pressed = ~REG_KEYINPUT;
 
         if ((keys_pressed & key_mask) == key_mask)

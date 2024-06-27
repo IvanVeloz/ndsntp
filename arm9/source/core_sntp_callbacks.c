@@ -97,8 +97,24 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
         .tv_nsec = (time_t)(ms*1000),
     };
     LogInfo(("RTC set to %lli",t.tv_sec));
+
     #warning clock_settime is commented out
     //clock_settime(CLOCK_REALTIME, &t);
+
+    struct tm ts;
+    ts = *localtime(&(t.tv_sec);
+
+    rtcTimeAndDate rtctime = {
+        .year = ts.tm_year-100,        // - works until 2099. % works forever
+        .month = ts.tm_mon,
+        .day = ts.tm_mday,
+        .weekday = ts.tm_wday,
+        .day = ts.tm_mday,
+        .hours = ts.tm_hour,
+        .minutes = ts.tm_min,
+        .seconds = ts.tm_sec
+    };
+    fifoSendDatamsg(FIFO_USER_01, sizeof(rtctime), (void *)&rtctime);
 }
 
 /**

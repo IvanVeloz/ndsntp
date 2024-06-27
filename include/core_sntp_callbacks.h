@@ -7,9 +7,14 @@
 #ifndef CORE_SNTP_CALLBACKS_H_
 #define CORE_SNTP_CALLBACKS_H_
 
+#include <nds/fifocommon.h>
 #include <stdbool.h>
 #include <core_sntp_client.h>
 #include <sys/socket.h>
+
+#ifndef FIFO_NDSNTP
+#define FIFO_NDSNTP FIFO_USER_01
+#endif
 
 struct NetworkContext
 {
