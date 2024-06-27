@@ -103,7 +103,7 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
 
     rtcTimeAndDate rtctime = {
         .year = ts.tm_year-100,        // - works until 2099. % works forever
-        .month = ts.tm_mon,
+        .month = ts.tm_mon+1,
         .day = ts.tm_mday,
         .weekday = ts.tm_wday,
         .day = ts.tm_mday,
