@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
 
     while (!exit_loop)
     {
+        printf("Hello from ARM7\n");
         const uint16_t key_mask = KEY_START;
         uint16_t keys_pressed = ~REG_KEYINPUT;
 

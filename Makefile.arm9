@@ -5,7 +5,7 @@
 # SPDX-FileContributor: Ivan Veloz, 2024
 
 SOURCEDIRS	:= arm9/source coreSNTP/source
-INCLUDEDIRS	:= include coreSNTP/source/include
+INCLUDEDIRS	:= include arm9/include coreSNTP/source/include
 
 BLOCKSDS	?= /opt/blocksds/core
 LIBS		:= -ldswifi9 -lnds9

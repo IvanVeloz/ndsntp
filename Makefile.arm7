@@ -1,11 +1,11 @@
+# Copyright (C) 2024 Ivan Veloz.  All Rights Reserved.
 #
+# SPDX-License-Identifier: MIT
 #
-# SPDX-License-Identifier: CC0-1.0
-#
-# SPDX-FileContributor: Antonio Niño Díaz, 2023
+# SPDX-FileContributor: Ivan Veloz, 2024
 
-
-
+SOURCEDIRS	:= arm7/source coreSNTP/source
+INCLUDEDIRS	:= include arm7/include coreSNTP/source/include
 
 BLOCKSDS	?= /opt/blocksds/core
 LIBS		:= -lnds7 -ldswifi7 -lmm7 -lc
