@@ -2,7 +2,8 @@
  * Copyright (C) 2024 Ivan Veloz.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
-*/
+ * SPDX-FileContributor: Ivan Veloz, 2024
+ */
 
 #define CORE_SNTP_LOG_LEVEL 6
 

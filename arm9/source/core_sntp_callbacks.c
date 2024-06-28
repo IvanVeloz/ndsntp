@@ -2,7 +2,8 @@
  * Copyright (C) 2024 Ivan Veloz.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
-*/
+ * SPDX-FileContributor: Ivan Veloz, 2024
+ */
 #include <nds/system.h>         /* Real time clock */
 #include <sys/socket.h>         /* Network sockets */
 #include <sys/select.h>         /* fd_set type and macros for select() */
@@ -77,27 +78,41 @@ void sntpGetTime(SntpTimestamp_t * pCurrentTime)
  * We also made the following assumptions:
  * 1. No adjustments have been made to account for the delay in getting the
  * time from the RTC (or the function itself).
- * 2. Accuracy better than 1 second is not necessary. I would like to improve
- * this down to 10ms eventually, which is the highest date resolution of the FAT 
- * filesystem.
+ * 2. Accuracy better than 1 second is not necessary. The RTC resolution is 1
+ * second and the resolution of the FAT filesystem is 2 seconds for 
+ * modification time.
  */
 void sntpSetTime(   const SntpServerInfo_t * pTimeServer, 
                     const SntpTimestamp_t * pServerTime,
                     int64_t clockOffsetMs,
                     SntpLeapSecondInfo_t leapSecondInfo )
 {
-    uint32_t s, ms;
-    SntpStatus_t status = Sntp_ConvertToUnixTime(pServerTime, &s, &ms);
+    uint32_t s, us;
+    SntpStatus_t status = Sntp_ConvertToUnixTime(pServerTime, &s, &us);
     if(status != SntpSuccess) {
-        LogWarn(("Could not get time from SNTP. Continuing."));
+        LogWarn(("Could not get time from SNTP. Skipping time setting."));
+        return;
     }
     struct timespec t = {
-        .tv_sec  = (time_t)s,
-        .tv_nsec = (time_t)(ms*1000),
+        .tv_sec  = (us<500000)? s : s+1,
+        .tv_nsec = 0,
     };
+
+    struct tm ts;
+    ts = *localtime(&t.tv_sec);
+
+    rtcTimeAndDate rtctime = {
+        .year = ts.tm_year-100,        // -100 works until 2099. % works forever
+        .month = ts.tm_mon+1,
+        .day = ts.tm_mday,
+        .weekday = ts.tm_wday,
+        .day = ts.tm_mday,
+        .hours = ts.tm_hour,
+        .minutes = ts.tm_min,
+        .seconds = ts.tm_sec
+    };
+    fifoSendDatamsg(FIFO_USER_01, sizeof(rtctime), (void *)&rtctime);
     LogInfo(("RTC set to %lli",t.tv_sec));
-    #warning clock_settime is commented out
-    //clock_settime(CLOCK_REALTIME, &t);
 }
 
 /**
