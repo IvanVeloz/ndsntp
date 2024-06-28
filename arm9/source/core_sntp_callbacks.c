@@ -87,22 +87,22 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
                     int64_t clockOffsetMs,
                     SntpLeapSecondInfo_t leapSecondInfo )
 {
-    uint32_t s, ms;
-    SntpStatus_t status = Sntp_ConvertToUnixTime(pServerTime, &s, &ms);
+    uint32_t s, us;
+    SntpStatus_t status = Sntp_ConvertToUnixTime(pServerTime, &s, &us);
     if(status != SntpSuccess) {
         LogWarn(("Could not get time from SNTP. Skipping time setting."));
         return;
     }
     struct timespec t = {
-        .tv_sec  = (time_t)s,
-        .tv_nsec = (time_t)(ms*1000),
+        .tv_sec  = (us<500000)? s : s+1,
+        .tv_nsec = 0,
     };
 
     struct tm ts;
     ts = *localtime(&t.tv_sec);
 
     rtcTimeAndDate rtctime = {
-        .year = ts.tm_year-100,        // - works until 2099. % works forever
+        .year = ts.tm_year-100,        // -100 works until 2099. % works forever
         .month = ts.tm_mon+1,
         .day = ts.tm_mday,
         .weekday = ts.tm_wday,
