@@ -78,9 +78,9 @@ void sntpGetTime(SntpTimestamp_t * pCurrentTime)
  * We also made the following assumptions:
  * 1. No adjustments have been made to account for the delay in getting the
  * time from the RTC (or the function itself).
- * 2. Accuracy better than 1 second is not necessary. I would like to improve
- * this down to 10ms eventually, which is the highest date resolution of the FAT 
- * filesystem.
+ * 2. Accuracy better than 1 second is not necessary. The RTC resolution is 1
+ * second and the resolution of the FAT filesystem is 2 seconds for 
+ * modification time.
  */
 void sntpSetTime(   const SntpServerInfo_t * pTimeServer, 
                     const SntpTimestamp_t * pServerTime,
