@@ -15,6 +15,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <assert.h>
+#include <time.h>
 #include <core_sntp_client.h>
 #include "core_sntp_callbacks.h"
 #include "core_sntp_config.h"
@@ -25,41 +26,30 @@
 #define NTP_SEND_WAIT_TIME_MS 			2000
 #define NTP_RECEIVE_WAIT_TIME_MS		1000
 
+#define IF_DIAGNOSTICS					\
+	swiWaitForVBlank();					\
+	scanKeys();							\
+	if(keysDown() & (KEY_L|KEY_R))
+
 const char * ntpurl = "us.pool.ntp.org";
 
-void spinloop() {
-	while(1) {
-		swiWaitForVBlank();
-		int keys = keysDown();
-		if(keys) break;	
-	}
-}
+void spinloop(void);
+void printIpInfo(void);
+unsigned int sleeprtc(unsigned int seconds);
 
 int main(void) {
 
-	struct in_addr ip, gateway, mask, dns1, dns2;
-
 	consoleDemoInit();
 
-	printf("Connecting via WFC data\n");
-
 	if(!Wifi_InitDefault(WFC_CONNECT)) {
-		printf("Connection failed.\n");
+		printf("WFC connection failed. Check your wireless settings.\n");
 		spinloop();
 		goto end;
 	}
-
-	printf("Connected.\n");
-
-	ip = Wifi_GetIPInfo(&gateway, &mask, &dns1, &dns2);
 	
-	printf("ip     : %s\n", inet_ntoa(ip) );
-	printf("gateway: %s\n", inet_ntoa(gateway) );
-	printf("mask   : %s\n", inet_ntoa(mask) );
-	printf("dns1   : %s\n", inet_ntoa(dns1) );
-	printf("dns2   : %s\n", inet_ntoa(dns2) );
-
-	printf("ntp url: %s\n",ntpurl);
+	IF_DIAGNOSTICS {
+		printIpInfo();
+	}
 
 	struct hostent * ntphost = gethostbyname(ntpurl);
 	if(ntphost == NULL) {
@@ -68,44 +58,40 @@ int main(void) {
 		goto end;
 	}
 
-	printf("h_name : %s\n",ntphost->h_name);
-
-	for(size_t i=0; ntphost->h_aliases[i] != NULL; i++) {
-		printf("h_alias: %s\n",ntphost->h_aliases[i]);
-	}
-
 	/* Assert that we're dealing with IPv4 addresses, 32 bit lengths. */
 	assert(ntphost->h_addrtype == AF_INET);
 	assert(ntphost->h_length == 4);
 
-	for(int i=0; ntphost->h_addr_list[i] != NULL; i++) {
-		struct in_addr a = *(struct in_addr *)ntphost->h_addr_list[i];
-		printf("h_addr : %s\n", inet_ntoa(a));
+	IF_DIAGNOSTICS {
+		printf("h_name : %s\n",ntphost->h_name);
+		for(size_t i=0; ntphost->h_aliases[i] != NULL; i++) {
+			printf("h_alias: %s\n",ntphost->h_aliases[i]);
+		}
+		for(int i=0; ntphost->h_addr_list[i] != NULL; i++) {
+			struct in_addr a = *(struct in_addr *)ntphost->h_addr_list[i];
+			printf("h_addr : %s\n", inet_ntoa(a));
+		}
 	}
 	
 	uint8_t netBuffer[SNTP_PACKET_BASE_SIZE];
-	NetworkContext_t netContext;
-	netContext.udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-	LogDebug(("UDP fd : %i",con.udpSocket));
-
+	NetworkContext_t netContext = {
+		.udpSocket = socket(AF_INET, SOCK_DGRAM, 0)
+	};
 	SntpServerInfo_t server = {
 		.port = SNTP_DEFAULT_SERVER_PORT,
 		.pServerName = ntpurl,
 		.serverNameLen = strlen(ntpurl)
 	};
-
-    UdpTransportInterface_t udpTransportIntf;
- 
-    udpTransportIntf.pUserContext = &netContext;
-    udpTransportIntf.sendTo = sntpUdpSend;
-    udpTransportIntf.recvFrom = sntpUdpRecv;
-
+    UdpTransportInterface_t udpTransportIntf = {
+		.pUserContext = &netContext,
+		.sendTo = sntpUdpSend,
+		.recvFrom = sntpUdpRecv
+	};
 	SntpContext_t sntpContext;
 	
     SntpStatus_t status = Sntp_Init( &sntpContext,
                                      &server,
-                                     sizeof( server ) / sizeof( SntpServerInfo_t ),
+                                     sizeof(server) / sizeof(SntpServerInfo_t),
                                      NTP_TIMEOUT,
                                      netBuffer,
                                      SNTP_PACKET_BASE_SIZE,
@@ -147,3 +133,34 @@ int main(void) {
 	end:
 	return 0;
 }
+
+void spinloop(void) {
+	while(1) {
+		swiWaitForVBlank();
+		int keys = keysDown();
+		if(keys) break;	
+	}
+}
+
+void printIpInfo(void) {
+	struct in_addr ip, gateway, mask, dns1, dns2;
+	ip = Wifi_GetIPInfo(&gateway, &mask, &dns1, &dns2);
+	printf("ip     : %s\n", inet_ntoa(ip) );
+	printf("gateway: %s\n", inet_ntoa(gateway) );
+	printf("mask   : %s\n", inet_ntoa(mask) );
+	printf("dns1   : %s\n", inet_ntoa(dns1) );
+	printf("dns2   : %s\n", inet_ntoa(dns2) );
+	printf("ntp url: %s\n",ntpurl);
+}
+
+/* Delay for a number of seconds, using the RTC as time source.
+ * This way we avoid setting up timers. The actual time slept may be
+ * a fraction of a second more than requested (e.g. if 1 second is asked 
+ * right after the clock ticks, the function will sleep 1 second plus the
+ * fraction elapsed right after the clock ticked). Returns 0.
+ */
+unsigned int sleeprtc(unsigned int seconds) {
+	for(time_t t = time(NULL), l=t+seconds+1; t<l; t = time(NULL));
+	return 0;
+}
+
