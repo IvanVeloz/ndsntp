@@ -29,7 +29,7 @@
 #define IF_DIAGNOSTICS					\
 	swiWaitForVBlank();					\
 	scanKeys();							\
-	if(keysDown() & (KEY_L|KEY_R))
+	if(keysCurrent() & (KEY_L|KEY_R))
 
 const char * ntpurl = "us.pool.ntp.org";
 
