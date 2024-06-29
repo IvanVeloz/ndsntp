@@ -49,6 +49,7 @@ int main(void) {
 	
 	IF_DIAGNOSTICS {
 		printIpInfo();
+		sleeprtc(2);
 	}
 
 	struct hostent * ntphost = gethostbyname(ntpurl);
