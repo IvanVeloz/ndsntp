@@ -34,8 +34,9 @@
 const char * ntpurl = "us.pool.ntp.org";
 
 void spinloop(void);
-void printIpInfo(void);
 unsigned int sleeprtc(unsigned int seconds);
+void printIpInfo(void);
+int printNsLookup(void);
 
 int main(void) {
 
@@ -52,26 +53,9 @@ int main(void) {
 		sleeprtc(2);
 	}
 
-	struct hostent * ntphost = gethostbyname(ntpurl);
-	if(ntphost == NULL) {
-		printf("Error: failed to get hostname");
-		spinloop();
-		goto end;
-	}
-
-	/* Assert that we're dealing with IPv4 addresses, 32 bit lengths. */
-	assert(ntphost->h_addrtype == AF_INET);
-	assert(ntphost->h_length == 4);
-
 	IF_DIAGNOSTICS {
-		printf("h_name : %s\n",ntphost->h_name);
-		for(size_t i=0; ntphost->h_aliases[i] != NULL; i++) {
-			printf("h_alias: %s\n",ntphost->h_aliases[i]);
-		}
-		for(int i=0; ntphost->h_addr_list[i] != NULL; i++) {
-			struct in_addr a = *(struct in_addr *)ntphost->h_addr_list[i];
-			printf("h_addr : %s\n", inet_ntoa(a));
-		}
+		if(printNsLookup()) spinloop();
+		else sleeprtc(2);
 	}
 	
 	uint8_t netBuffer[SNTP_PACKET_BASE_SIZE];
@@ -135,12 +119,27 @@ int main(void) {
 	return 0;
 }
 
+/* Do nothing until a key is pressed.
+ */
 void spinloop(void) {
 	while(1) {
 		swiWaitForVBlank();
 		int keys = keysDown();
 		if(keys) break;	
 	}
+}
+
+/* Delay for a number of seconds, using the RTC as time source.
+ * This way we avoid setting up timers. The actual time slept may be
+ * a fraction of a second more than requested (e.g. if 1 second is asked 
+ * right after the clock ticks, the function will sleep 1 second plus the
+ * fraction elapsed right after the clock ticked). Returns 0.
+ */
+unsigned int sleeprtc(unsigned int seconds) {
+	for(time_t t = time(NULL), l=t+seconds+1; t<l; t = time(NULL)) {
+		swiWaitForVBlank();	// I assume this is more energy efficient
+	}
+	return 0;
 }
 
 void printIpInfo(void) {
@@ -154,14 +153,25 @@ void printIpInfo(void) {
 	printf("ntp url: %s\n",ntpurl);
 }
 
-/* Delay for a number of seconds, using the RTC as time source.
- * This way we avoid setting up timers. The actual time slept may be
- * a fraction of a second more than requested (e.g. if 1 second is asked 
- * right after the clock ticks, the function will sleep 1 second plus the
- * fraction elapsed right after the clock ticked). Returns 0.
- */
-unsigned int sleeprtc(unsigned int seconds) {
-	for(time_t t = time(NULL), l=t+seconds+1; t<l; t = time(NULL));
+int printNsLookup(void) {
+	struct hostent * ntphost = gethostbyname(ntpurl);
+	if(ntphost == NULL) {
+		printf("Error: failed to get hostname");
+		return -1;
+	}
+
+	/* Assert that we're dealing with IPv4 addresses, 32 bit lengths. */
+	assert(ntphost->h_addrtype == AF_INET);
+	assert(ntphost->h_length == 4);
+	printf("h_name : %s\n",ntphost->h_name);
+	for(size_t i=0; ntphost->h_aliases[i] != NULL; i++) {
+		printf("h_alias: %s\n",ntphost->h_aliases[i]);
+	}
+	for(int i=0; ntphost->h_addr_list[i] != NULL; i++) {
+		struct in_addr a = *(struct in_addr *)ntphost->h_addr_list[i];
+		printf("h_addr : %s\n", inet_ntoa(a));
+	}
 	return 0;
 }
+
 
