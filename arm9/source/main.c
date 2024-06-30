@@ -6,6 +6,7 @@
  */
 
 #define CORE_SNTP_LOG_LEVEL 6
+#define RTC_IS_GMT	false
 
 #include <nds.h>
 #include <unistd.h>
@@ -22,37 +23,60 @@
 #include "core_sntp_config.h"
 
 /* Configuration constants for the SNTP client. */
-
 #define NTP_TIMEOUT						3000
 #define NTP_SEND_WAIT_TIME_MS 			2000
 #define NTP_RECEIVE_WAIT_TIME_MS		1000
 
+/* Function macros */
 #define IF_DIAGNOSTICS					\
 	if(keysCurrent() & (KEY_L|KEY_R))
 
-const char * ntpurl = "us.pool.ntp.org";
+/* Environment variables *
+ * These are used by some POSIX functions and are normally provided by the
+ * operating system. They are not provided by the NDS homebrew launchers though.
+ * So we provide the TZ variable ourselves for `localtime()` to do all timezone
+ * conversions.
+ */
+static char ndsntp_env_tz[256] = "TZ=NZST-12:00:00NZDT-13:00:00,M10.1.0,M3.3.0";
+static char *ndsntp_env[] = {
+	ndsntp_env_tz,
+	NULL
+};
+extern char **environ = &ndsntp_env[0];	// Provide our own environment variables
+extern char *tzname[2];
+
+/* Global types */
+struct Tz {
+	int8_t hour;
+	uint8_t minute;
+};
 
 enum Menu { MENU_TZ, MENU_SYNCING, MENU_SYNCED, MENU_EXIT };
 
+/* Function prototypes */
 void spinloop(void);
 unsigned int sleeprtc(unsigned int seconds);
 void printIpInfo(void);
 int printNsLookup(void);
+void printEnviron(void);
 int syncTime(int retries);
 enum Menu displayTZMenu(void);
 enum Menu displaySyncedMenu(void);
+
+/* Global vairiables */
+const char * ntpurl = "us.pool.ntp.org";
 
 int main(void) {
 
 	consoleDemoInit();
 
-	scanKeys();
+	printf("Connecting to WLAN\n");
 	if(!Wifi_InitDefault(WFC_CONNECT)) {
 		printf("WFC connection failed. Check your wireless settings.\n");
 		spinloop();
 		goto end;
 	}
-	
+
 	scanKeys();
 	IF_DIAGNOSTICS {
 		printIpInfo();
@@ -64,7 +88,16 @@ int main(void) {
 		if(printNsLookup()) spinloop();
 		else sleeprtc(2);
 	}
-	
+
+	scanKeys();
+	IF_DIAGNOSTICS {
+		printEnviron();
+		tzset();
+		printf("%s\n%s\n",tzname[0],tzname[1]);
+		spinloop();
+		printf("\x1b[2J"); // Clear console
+	}
+
 	enum Menu menu = MENU_TZ;
 	while( 1 )
     {
@@ -162,6 +195,16 @@ int printNsLookup(void) {
 	return 0;
 }
 
+/* Print all environment variables. This works on Linux and Unix too! Just copy
+ * and paste. Very cool.
+ */
+void printEnviron(void)
+{
+	for(size_t i=0; environ[i]!=NULL; i++)
+		printf("%s\n",environ[i]);
+}
+
+
 /* Connect to an NTP server and set the time (assumes locale is set; if not set
  * it defaults to UTC).
  */
@@ -226,7 +269,6 @@ int syncTime(int retries)
 enum Menu displayTZMenu(void)
 {
 	enum Selection {s_hour, s_minute};
-	struct Tz {int8_t hour; uint8_t minute;};
 
 	static enum Selection sel = s_hour;
 	static struct Tz tz = {.hour=0, .minute=0};
@@ -250,7 +292,22 @@ enum Menu displayTZMenu(void)
 
 	if(keys & KEY_A) {
 		tz.minute = tz.minute % 60;
-		// TODO: change the system locale right here
+		
+		snprintf(	ndsntp_env_tz,sizeof(ndsntp_env_tz),
+					"TZ=<UTC%+03i%02u>%+03i:%02u",
+					tz.hour, tz.minute, -tz.hour, tz.minute);
+					// POSIX uses the opposite sign compared to ISO
+		tzset();	// Change the system's timezone
+		IF_DIAGNOSTICS {
+			printf("\n");
+			printEnviron();
+			spinloop();
+		}
+		IF_DIAGNOSTICS {
+			printf("%s\n%s\n",tzname[0],tzname[1]);
+			spinloop();
+		}
+		
 		return MENU_SYNCING;
 	}
 	else if(keys & KEY_LEFT) {
@@ -297,7 +354,7 @@ enum Menu displaySyncedMenu(void)
 {
 	char str[100];
 	time_t t = time(NULL);
-	struct tm *tmp = localtime(&t);
+	struct tm *tmp = RTC_IS_GMT? localtime(&t) : gmtime(&t);
 	swiWaitForVBlank();
 	printf("\x1b[2J"); // Clear console
 	printf("\n\nCurrent time:\n\n\n");
