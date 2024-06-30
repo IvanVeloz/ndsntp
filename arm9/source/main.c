@@ -107,6 +107,7 @@ int main(void) {
 void spinloop(void) {
 	while(1) {
 		swiWaitForVBlank();
+		scanKeys();
 		int keys = keysDown();
 		if(keys) break;	
 	}
