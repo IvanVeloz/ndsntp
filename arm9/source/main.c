@@ -46,6 +46,7 @@ int main(void) {
 
 	consoleDemoInit();
 
+	scanKeys();
 	if(!Wifi_InitDefault(WFC_CONNECT)) {
 		printf("WFC connection failed. Check your wireless settings.\n");
 		spinloop();
