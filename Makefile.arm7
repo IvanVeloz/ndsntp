@@ -1,0 +1,16 @@
+#
+#
+# SPDX-License-Identifier: CC0-1.0
+#
+# SPDX-FileContributor: Antonio Niño Díaz, 2023
+
+
+
+
+BLOCKSDS	?= /opt/blocksds/core
+LIBS		:= -lnds7 -ldswifi7 -lmm7 -lc
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds \
+		   $(BLOCKSDS)/libs/dswifi \
+		   $(BLOCKSDS)/libs/maxmod
+
+include $(BLOCKSDS)/sys/default_makefiles/rom_arm9arm7/Makefile.arm7

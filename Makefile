@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# SPDX-FileContributor: Antonio Niño Díaz, 2024
+# SPDX-FileContributor: Ivan Veloz, 2024
 
 BLOCKSDS	?= /opt/blocksds/core
 
@@ -16,10 +16,4 @@ GAME_AUTHOR		:= Ivan Veloz
 # Libraries
 # ---------
 
-SOURCEDIRS	:= source coreSNTP/source
-INCLUDEDIRS	:= include coreSNTP/source/include
-LIBS		:= -ldswifi9 -lnds9
-LIBDIRS		:= $(BLOCKSDS)/libs/dswifi \
-			   $(BLOCKSDS)/libs/libnds \
-
-include $(BLOCKSDS)/sys/default_makefiles/rom_arm9/Makefile
+include $(BLOCKSDS)/sys/default_makefiles/rom_arm9arm7/Makefile
