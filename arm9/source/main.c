@@ -89,15 +89,6 @@ int main(void) {
 		else sleeprtc(2);
 	}
 
-	scanKeys();
-	IF_DIAGNOSTICS {
-		printEnviron();
-		tzset();
-		printf("%s\n%s\n",tzname[0],tzname[1]);
-		spinloop();
-		printf("\x1b[2J"); // Clear console
-	}
-
 	enum Menu menu = MENU_TZ;
 	while( 1 )
     {
