@@ -37,7 +37,7 @@
  * So we provide the TZ variable ourselves for `localtime()` to do all timezone
  * conversions.
  */
-static char ndsntp_env_tz[256] = "TZ=NZST-12:00:00NZDT-13:00:00,M10.1.0,M3.3.0";
+static char ndsntp_env_tz[256] = "";
 static char *ndsntp_env[] = {
 	ndsntp_env_tz,
 	NULL
