@@ -16,6 +16,10 @@
 #define FIFO_NDSNTP FIFO_USER_01
 #endif
 
+#ifndef RTC_IS_GMT
+#define RTC_IS_GMT	false
+#endif
+
 struct NetworkContext
 {
     int udpSocket;

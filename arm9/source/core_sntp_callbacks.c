@@ -99,7 +99,7 @@ void sntpSetTime(   const SntpServerInfo_t * pTimeServer,
     };
 
     struct tm ts;
-    ts = *localtime(&t.tv_sec);
+    ts = RTC_IS_GMT? *gmtime(&t.tv_sec) : *localtime(&t.tv_sec);
 
     rtcTimeAndDate rtctime = {
         .year = ts.tm_year-100,        // -100 works until 2099. % works forever
