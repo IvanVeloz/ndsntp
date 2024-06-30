@@ -8,12 +8,12 @@ NTP client for the Nintendo DS. Download [here](https://github.com/IvanVeloz/nds
 * Press A to set the time.
 * Press start to go exit the app, A to sync again, or B to go back to the start.
 
-Tip: you can get diagnostics information by holding down the L or R button before starting the app. Some of it dismisses after 2 seconds, others need you to press any button.
+Tip: you can get diagnostics information by holding down the L or R button before starting the app. Some information dismisses itself after 2 seconds, other information stays until you press a button.
 
-## Background information
+### Background information
 Uses the coreNTP library made by Amazon for the FreeRTOS project. The library has been ported and targets one second precision (as that is the resolution for the NDS's real time clock). The project targets BlocksDS and real hardware. You can build it by installing the BlocksDS SDK and typing `make`.
 
-## Project status
+### Project status
 As of this version, the project can get the time from an NTP server, apply your timezone settings, and store it in the NDS real time clock. You provide your timezone (for example UTC-04) with an user interface.
 
 Next steps are (in no particular order):
