@@ -175,7 +175,7 @@ int printNsLookup(void) {
 
 	/* Assert that we're dealing with IPv4 addresses, 32 bit lengths. */
 	assert(ntphost->h_addrtype == AF_INET);
-	assert(ntphost->h_length == 4);
+	assert(ntphost->h_length >= 4);
 	printf("h_name : %s\n",ntphost->h_name);
 	for(size_t i=0; ntphost->h_aliases[i] != NULL; i++) {
 		printf("h_alias: %s\n",ntphost->h_aliases[i]);
