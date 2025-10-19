@@ -72,7 +72,7 @@ int main(void) {
 	consoleDemoInit();
 
 	printf("Connecting to WLAN\n");
-	if(!Wifi_InitDefault(WFC_CONNECT)) {
+	if(!Wifi_InitDefault(WFC_CONNECT | WIFI_ATTEMPT_DSI_MODE)) {
 		printf("WFC connection failed. Check your wireless settings.\n");
 		spinloop();
 		goto end;
