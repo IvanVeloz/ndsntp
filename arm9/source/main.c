@@ -29,7 +29,7 @@
 
 /* Function macros */
 #define IF_DIAGNOSTICS					\
-	if(keysCurrent() & (KEY_L|KEY_R))
+	if(keysHeld() & (KEY_L|KEY_R))
 
 /* Environment variables *
  * These are used by some POSIX functions and are normally provided by the
@@ -42,7 +42,8 @@ static char *ndsntp_env[] = {
 	ndsntp_env_tz,
 	NULL
 };
-extern char **environ = &ndsntp_env[0];	// Provide our own environment variables
+extern char **environ;
+char **environ = &ndsntp_env[0];	// Provide our own environment variables
 extern char *tzname[2];
 
 /* Global types */
@@ -97,7 +98,7 @@ int main(void) {
 				menu = displayTZMenu();
 				break;
 			case MENU_SYNCING:
-				swiWaitForVBlank();
+				cothread_yield_irq(IRQ_VBLANK);
 				scanKeys();
 				printf("\x1b[2J"); // Clear console
 				printf("\n\n");
@@ -130,7 +131,7 @@ int main(void) {
  */
 void spinloop(void) {
 	while(1) {
-		swiWaitForVBlank();
+		cothread_yield_irq(IRQ_VBLANK);
 		scanKeys();
 		int keys = keysDown();
 		if(keys) break;	
@@ -145,7 +146,7 @@ void spinloop(void) {
  */
 unsigned int sleeprtc(unsigned int seconds) {
 	for(time_t t = time(NULL), l=t+seconds+1; t<l; t = time(NULL)) {
-		swiWaitForVBlank();	// I assume this is more energy efficient
+		cothread_yield_irq(IRQ_VBLANK);	// I assume this is more energy efficient
 	}
 	return 0;
 }
@@ -264,7 +265,7 @@ enum Menu displayTZMenu(void)
 	static enum Selection sel = s_hour;
 	static struct Tz tz = {.hour=0, .minute=0};
 
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
 	printf("\x1b[2J"); // Clear console
 	const int coord_x[2] = {
 		5, 8
@@ -346,7 +347,7 @@ enum Menu displaySyncedMenu(void)
 	char str[100];
 	time_t t = time(NULL);
 	struct tm *tmp = RTC_IS_GMT? localtime(&t) : gmtime(&t);
-	swiWaitForVBlank();
+	cothread_yield_irq(IRQ_VBLANK);
 	printf("\x1b[2J"); // Clear console
 	printf("\n\nCurrent time:\n\n\n");
 	if (strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S%z", tmp) == 0)

@@ -30,7 +30,7 @@ bool sntpResolveDns(const SntpServerInfo_t * pServerAddr,
 
     if(ntphost == NULL)                 return false;
 	if(ntphost->h_addrtype != AF_INET)  return false;
-	if(ntphost->h_length != 4)          return false;
+	if(ntphost->h_length < 4)           return false;
 
     struct in_addr addr = *(struct in_addr *)ntphost->h_addr_list[0];
     *pIpV4Addr = htonl((uint32_t)addr.s_addr);
@@ -193,7 +193,7 @@ int32_t sntpUdpRecv(NetworkContext_t * pNetworkContext,
         goto cleanup;
     }
     else if (r > 0) {
-        int addrlen = sizeof(addri);
+        socklen_t addrlen = sizeof(addri);
         r = recvfrom(   pNetworkContext->udpSocket, pBuffer,bytesToRecv, 0,
                         (struct sockaddr *)(&addri), &addrlen);
     }
