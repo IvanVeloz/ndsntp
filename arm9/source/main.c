@@ -44,7 +44,6 @@ static char *ndsntp_env[] = {
 };
 extern char **environ;
 char **environ = &ndsntp_env[0];	// Provide our own environment variables
-extern char *tzname[2];
 
 /* Global types */
 struct Tz {
@@ -72,48 +71,52 @@ int main(void) {
 	consoleDemoInit();
 
 	printf("Connecting to WLAN\n");
+	
 	if(!Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE)) {
-		Wifi_AutoConnect();
-		for(	
-			enum WIFI_ASSOCSTATUS s=Wifi_AssocStatus(), sl=s; 
-			sl!=ASSOCSTATUS_ASSOCIATED; 
-			sl=s, s = Wifi_AssocStatus()
-		){	// this loop is mostly a flex
-			switch(s) {
-				case ASSOCSTATUS_SEARCHING:
-					if(sl != s)
-						printf("Searching for AP...\n");
-					break;
-				case ASSOCSTATUS_ASSOCIATING:
-					if(sl != s)
-						printf("Associating...\n");
-					break;
-				case ASSOCSTATUS_AUTHENTICATING:
-					if(sl != s)
-						printf("Authenticating...\n");
-					break;
-				case ASSOCSTATUS_ACQUIRINGDHCP:
-					if(sl != s) 
-						printf("Acquiring IP address...\n");
-					break;
-				case ASSOCSTATUS_ASSOCIATED:
-					printf("Associated!\n");
-					break;
-				case ASSOCSTATUS_CANNOTCONNECT:
-					printf("Cannot connect; error.\n");
-					[[fallthrough]];
-				case ASSOCSTATUS_DISCONNECTED:
-					[[fallthrough]];
-				default:
-					printf("WFC connection failed. Check your wireless settings.\n");
-					spinloop();
-					goto end;
-			}
-			cothread_yield_irq(IRQ_VBLANK);
-		}
-		printf("Connected to the AP!\n");
-
+		printf("WIFI hardware initialization failed.\n");
+		spinloop();
+		goto end;
 	}
+	
+	Wifi_AutoConnect();
+	for(
+		enum WIFI_ASSOCSTATUS s=Wifi_AssocStatus(), sl=s; 
+		sl!=ASSOCSTATUS_ASSOCIATED; 
+		sl=s, s = Wifi_AssocStatus()
+	){	// this loop is mostly a flex
+		switch(s) {
+			case ASSOCSTATUS_SEARCHING:
+				if(sl != s)
+					printf("Searching for AP...\n");
+				break;
+			case ASSOCSTATUS_ASSOCIATING:
+				if(sl != s)
+					printf("Associating...\n");
+				break;
+			case ASSOCSTATUS_AUTHENTICATING:
+				if(sl != s)
+					printf("Authenticating...\n");
+				break;
+			case ASSOCSTATUS_ACQUIRINGDHCP:
+				if(sl != s) 
+					printf("Acquiring IP address...\n");
+				break;
+			case ASSOCSTATUS_ASSOCIATED:
+				printf("Associated!\n");
+				break;
+			case ASSOCSTATUS_CANNOTCONNECT:
+				printf("Cannot connect; error.\n");
+				[[fallthrough]];
+			case ASSOCSTATUS_DISCONNECTED:
+				[[fallthrough]];
+			default:
+				printf("WFC connection failed. Check your wireless settings.\n");
+				spinloop();
+				goto end;
+		}
+		cothread_yield_irq(IRQ_VBLANK);
+	}
+	printf("Connected to the AP!\n");
 
 	scanKeys();
 	IF_DIAGNOSTICS {
