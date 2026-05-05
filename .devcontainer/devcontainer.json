@@ -1,0 +1,60 @@
+{
+    "name": "BlocksDS Development Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".",
+        "args": {
+            "VARIANT": "dev",
+            "VERSION": "latest"
+        },
+        "target": "devcontainer-melonds"
+    },
+    "runArgs": [
+        "--shm-size=1gb"
+    ],
+    "forwardPorts": [
+        5901,
+        6080,
+        3333,
+        3334
+    ],
+    "portsAttributes": {
+        "5901": {
+            "label": "VNC Server",
+            "onAutoForward": "notify"
+        },
+        "6080": {
+            "label": "noVNC Web Client",
+            "onAutoForward": "notify"
+        },
+        "3333": {
+            "label": "melonDS GDB ARM9"
+        },
+        "3334": {
+            "label": "melonDS GDB ARM7"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.makefile-tools"
+            ],
+            "settings": {
+                "C_Cpp.default.compilerPath":
+                    "/opt/wonderful/toolchain/gcc-arm-none-eabi/bin/arm-none-eabi-gcc",
+                "C_Cpp.default.includePath": [
+                    "${workspaceFolder}/**",
+                    "/opt/wonderful/thirdparty/blocksds/core/libs/*/include"
+                ]
+            }
+        }
+    },
+    "postCreateCommand": "echo 'BlocksDS devcontainer ready!'",
+    "remoteUser": "ubuntu",
+    "features": {
+        "ghcr.io/devcontainers/features/desktop-lite:1": {},
+        "ghcr.io/devcontainers/features/common-utils:2": {},
+        "ghcr.io/devcontainers/features/github-cli": {}
+    }
+}
