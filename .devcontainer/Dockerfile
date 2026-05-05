@@ -18,7 +18,7 @@ RUN apt-get update && \
 
 FROM devcontainer-base AS devcontainer-melonds
 RUN ARCH=$(uname -m) \
-    && MELONDS_URL=$(curl -s https://api.github.com/repos/melonDS-emu/melonDS/releases/263129025 \
+    && MELONDS_URL=$(curl -s https://api.github.com/repos/melonDS-emu/melonDS/releases/latest \
     | grep "browser_download_url.*appimage-${ARCH}.zip" \
     | cut -d '"' -f 4) \
     && curl -L -o melonDS.zip "$MELONDS_URL" \
