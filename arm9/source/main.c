@@ -85,6 +85,9 @@ int main(void) {
 		sl=s, s = Wifi_AssocStatus()
 	){	// this loop is mostly a flex
 		switch(s) {
+			case ASSOCSTATUS_DISCONNECTED:
+				// the new WiFi lib passes through this state before searching
+				break;
 			case ASSOCSTATUS_SEARCHING:
 				if(sl != s)
 					printf("Searching for AP...\n");
@@ -106,8 +109,6 @@ int main(void) {
 				break;
 			case ASSOCSTATUS_CANNOTCONNECT:
 				printf("Cannot connect; error.\n");
-				[[fallthrough]];
-			case ASSOCSTATUS_DISCONNECTED:
 				[[fallthrough]];
 			default:
 				printf("WFC connection failed. Check your wireless settings.\n");
