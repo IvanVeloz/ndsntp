@@ -44,8 +44,10 @@
                 "C_Cpp.default.compilerPath":
                     "/opt/wonderful/toolchain/gcc-arm-none-eabi/bin/arm-none-eabi-gcc",
                 "C_Cpp.default.includePath": [
-                    "${workspaceFolder}/**",
-                    "/opt/wonderful/thirdparty/blocksds/core/libs/*/include"
+                    "/opt/wonderful/toolchain/gcc-arm-none-eabi/arm-none-eabi/include/",
+                    "/opt/wonderful/thirdparty/blocksds/core/libs/*/include/",
+                    "${workspaceFolder}/include/",
+                    "${workspaceFolder}/coreSNTP/source/include"
                 ]
             }
         }
